@@ -45,20 +45,30 @@ export default function PremiumHero() {
   useEffect(() => {
     let t;
     const word = words[wordIndex];
+
     if (isDeleting) {
-      t = setTimeout(() => setCurrentText(word.slice(0, currentText.length - 1)), 35);
+      if (currentText === '') {
+        t = setTimeout(() => {
+          setIsDeleting(false);
+          setWordIndex((prev) => (prev + 1) % words.length);
+        }, 200);
+      } else {
+        t = setTimeout(() => {
+          setCurrentText(word.slice(0, currentText.length - 1));
+        }, 35);
+      }
     } else {
-      t = setTimeout(() => setCurrentText(word.slice(0, currentText.length + 1)), 75);
+      if (currentText === word) {
+        t = setTimeout(() => {
+          setIsDeleting(true);
+        }, 2500);
+      } else {
+        t = setTimeout(() => {
+          setCurrentText(word.slice(0, currentText.length + 1));
+        }, 75);
+      }
     }
-    if (!isDeleting && currentText === word) {
-      t = setTimeout(() => setIsDeleting(true), 2500);
-    }
-    if (isDeleting && currentText === '') {
-      t = setTimeout(() => {
-        setIsDeleting(false);
-        setWordIndex(p => (p + 1) % words.length);
-      }, 200);
-    }
+
     return () => clearTimeout(t);
   }, [currentText, isDeleting, wordIndex]);
 
