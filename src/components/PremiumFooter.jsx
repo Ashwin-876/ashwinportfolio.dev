@@ -29,7 +29,7 @@ const socials = [
   { name: 'Telegram', icon: FaTelegramPlane, href: 'https://t.me/ashwin_876' },
   { name: 'Discord', icon: FaDiscord, href: 'https://discord.com/users/ashwin_876' },
   { name: 'Reddit', icon: FaReddit, href: 'https://www.reddit.com/user/Icy_Writing_4874/' },
-  { name: 'WhatsApp', icon: FaWhatsapp, href: '#' },
+  { name: 'WhatsApp', icon: FaWhatsapp, href: 'https://wa.me/qr/RFSEXBRXXQOBF1' },
   { name: 'Gmail', icon: SiGmail, href: 'mailto:ashwinshaijus@gmail.com' },
   { name: 'Pinterest', icon: FaPinterest, href: 'https://in.pinterest.com/ashwinshaijuu/' },
 ];
