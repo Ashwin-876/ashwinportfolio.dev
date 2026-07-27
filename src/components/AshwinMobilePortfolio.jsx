@@ -306,7 +306,7 @@ export default function AshwinMobilePortfolio() {
 
 
           {/* Biography Bio */}
-          <p className="text-[17px] text-[#666666] leading-[1.8] font-light max-w-[260px] mb-8 mt-6">
+          <p className="text-[14px] text-[#666666] leading-[1.7] font-light max-w-[240px] mb-8 mt-6">
             I build intelligent systems and data-driven solutions that create real-world impact.
           </p>
 
