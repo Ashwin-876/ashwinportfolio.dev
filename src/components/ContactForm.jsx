@@ -49,7 +49,9 @@ const ParticleCanvas = () => {
       });
     }
 
+    let isVisible = false;
     const draw = () => {
+      if (!isVisible) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       particles.forEach((p) => {
         p.x += p.speedX;
@@ -59,21 +61,42 @@ const ParticleCanvas = () => {
         if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
         if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
 
+        // Softer concentric outer glow
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius * 2.2, 0, Math.PI * 2);
+        ctx.fillStyle = p.color.replace('0.25', '0.08');
+        ctx.fill();
+
+        // Inner solid particle
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
-        ctx.shadowBlur = 4;
-        ctx.shadowColor = p.color;
         ctx.fill();
-        ctx.shadowBlur = 0; // reset
       });
       animationId = requestAnimationFrame(draw);
     };
 
-    draw();
+    const observer = new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+      if (isVisible) {
+        if (!animationId) {
+          draw();
+        }
+      } else {
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+      }
+    }, { threshold: 0.01 });
+
+    observer.observe(canvas);
 
     return () => {
-      cancelAnimationFrame(animationId);
+      observer.disconnect();
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
       window.removeEventListener('resize', handleResize);
     };
   }, []);
@@ -235,7 +258,7 @@ const SuccessPopup = ({ onClose, audioSrc }) => {
     >
       <div 
         ref={cardRef}
-        className="relative w-full max-w-[400px] bg-[#09090e]/90 backdrop-blur-2xl border border-cyan-500/20 rounded-[24px] p-8 text-center shadow-[0_0_40px_rgba(6,182,212,0.15)] overflow-hidden"
+        className="relative w-full max-w-[400px] bg-[#09090e] border border-cyan-500/20 rounded-[24px] p-8 text-center shadow-[0_0_40px_rgba(6,182,212,0.15)] overflow-hidden"
       >
         {/* Cinematic glow overlays inside popup */}
         <div className="absolute -top-20 -left-20 w-44 h-44 bg-cyan-500/10 rounded-full blur-[45px] pointer-events-none" />
@@ -299,9 +322,11 @@ export default function ContactForm() {
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const isMobileViewport = window.innerWidth < 768;
+
     // Scroll reveal for the whole container
     const revealTween = gsap.fromTo(containerRef.current, 
-      { opacity: 0, y: 100 },
+      { opacity: 0, y: isMobileViewport ? 35 : 100 },
       {
         opacity: 1, 
         y: 0,
@@ -317,10 +342,11 @@ export default function ContactForm() {
     // Staggered reveal for contact cards
     const cards = containerRef.current.querySelectorAll('.contact-card');
     const staggerTween = gsap.fromTo(cards,
-      { opacity: 0, x: -50, filter: 'blur(10px)' },
+      { opacity: 0, x: isMobileViewport ? 0 : -50, y: isMobileViewport ? 30 : 0, filter: 'blur(10px)' },
       {
         opacity: 1,
         x: 0,
+        y: 0,
         filter: 'blur(0px)',
         duration: 0.8,
         stagger: 0.1,
@@ -426,7 +452,7 @@ export default function ContactForm() {
                 target={link.href ? "_blank" : undefined}
                 rel={link.href ? "noopener noreferrer" : undefined}
                 whileHover={{ scale: 1.02, x: 10 }}
-                className={`contact-card relative flex items-center gap-4 p-3.5 rounded-xl bg-white/[0.02] backdrop-blur-xl border border-white/5 hover:bg-white/[0.05] transition-all duration-300 group ${!link.href && 'cursor-default'}`}
+                className={`contact-card relative flex items-center gap-4 p-3.5 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] transition-all duration-300 group ${!link.href && 'cursor-default'}`}
               >
                 {/* Glowing Outline Hover Effect */}
                 <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-cyan-500 via-violet-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-all duration-500 blur-[1px] -z-10 pointer-events-none" />
@@ -461,7 +487,7 @@ export default function ContactForm() {
           {/* Neon Border Glow Backing */}
           <div className="absolute -inset-1 bg-gradient-to-b from-cyan-500/20 to-purple-500/20 rounded-2xl blur-lg opacity-40 pointer-events-none" />
           
-          <div className="relative w-full bg-[#070709]/80 backdrop-blur-3xl border border-white/10 rounded-2xl p-6 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
+          <div className="relative w-full bg-[#070709] border border-white/10 rounded-2xl p-6 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
             
             {/* Internal reflections & ambient lights */}
             <div className="absolute top-0 left-1/4 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
@@ -472,8 +498,9 @@ export default function ContactForm() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5 group">
-                  <label className="text-[10px] uppercase tracking-[0.15em] text-neutral-400 font-bold ml-0.5 group-focus-within:text-cyan-400 transition-colors">Full Name</label>
+                  <label htmlFor="from_name" className="text-[10px] uppercase tracking-[0.15em] text-neutral-400 font-bold ml-0.5 group-focus-within:text-cyan-400 transition-colors">Full Name</label>
                   <input 
+                    id="from_name"
                     type="text" 
                     name="from_name"
                     required 
@@ -482,8 +509,9 @@ export default function ContactForm() {
                   />
                 </div>
                 <div className="flex flex-col gap-1.5 group">
-                  <label className="text-[10px] uppercase tracking-[0.15em] text-neutral-400 font-bold ml-0.5 group-focus-within:text-cyan-400 transition-colors">Email Address</label>
+                  <label htmlFor="from_email" className="text-[10px] uppercase tracking-[0.15em] text-neutral-400 font-bold ml-0.5 group-focus-within:text-cyan-400 transition-colors">Email Address</label>
                   <input 
+                    id="from_email"
                     type="email" 
                     name="from_email"
                     required 
@@ -494,9 +522,10 @@ export default function ContactForm() {
               </div>
 
               <div className="flex flex-col gap-1.5 group">
-                <label className="text-[10px] uppercase tracking-[0.15em] text-neutral-400 font-bold ml-0.5 group-focus-within:text-cyan-400 transition-colors">Project Type</label>
+                <label htmlFor="project_type" className="text-[10px] uppercase tracking-[0.15em] text-neutral-400 font-bold ml-0.5 group-focus-within:text-cyan-400 transition-colors">Project Type</label>
                 <div className="relative">
                   <select 
+                    id="project_type"
                     required
                     name="project_type"
                     className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-3 text-white text-xs outline-none focus:border-cyan-400 focus:bg-white/5 focus:shadow-[0_0_20px_rgba(34,211,238,0.15),inset_0_1px_2px_rgba(255,255,255,0.05)] transition-all duration-300 appearance-none cursor-pointer font-mono"
@@ -514,8 +543,9 @@ export default function ContactForm() {
               </div>
 
               <div className="flex flex-col gap-1.5 group">
-                <label className="text-[10px] uppercase tracking-[0.15em] text-neutral-400 font-bold ml-0.5 group-focus-within:text-cyan-400 transition-colors">Message</label>
+                <label htmlFor="message" className="text-[10px] uppercase tracking-[0.15em] text-neutral-400 font-bold ml-0.5 group-focus-within:text-cyan-400 transition-colors">Message</label>
                 <textarea 
+                  id="message"
                   rows="4"
                   required 
                   name="message"

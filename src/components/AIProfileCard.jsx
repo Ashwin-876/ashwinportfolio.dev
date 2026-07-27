@@ -6,6 +6,7 @@ const AIProfileCard = () => {
   const cardRef = useRef(null);
 
   const handleMouseMove = (e) => {
+    if (window.matchMedia('(pointer: coarse)').matches) return;
     if (!cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -57,7 +58,7 @@ const AIProfileCard = () => {
               <div className="absolute -right-4 -top-4 opacity-5">
                 <Database size={64} />
               </div>
-              <span className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">5+</span>
+              <span className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">2+</span>
               <span className="text-[9px] uppercase tracking-widest text-neutral-500 font-bold mt-1">Years Building<br/>AI Systems</span>
             </div>
             

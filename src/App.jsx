@@ -8,6 +8,7 @@ import Shuffle from './components/Shuffle';
 import Folder from './components/Folder';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Observer } from 'gsap/Observer';
 import Lenis from 'lenis';
 import TechStack from './components/TechStack';
 import ContactCTA from './components/ContactCTA';
@@ -16,6 +17,11 @@ import PremiumFooter from './components/PremiumFooter';
 import AIProfileCard from './components/AIProfileCard';
 import AIFuturisticExperience from './components/AIFuturisticExperience';
 import SplitLoadingScreen from './components/SplitLoadingScreen';
+import MinimalistMobilePortfolio from './components/MinimalistMobilePortfolio';
+import EditorialMobilePortfolio from './components/EditorialMobilePortfolio';
+import StorytellingPortfolio from './components/StorytellingPortfolio';
+import AshwinMobilePortfolio from './components/AshwinMobilePortfolio';
+import { StaggerTestimonials } from '@/components/ui/stagger-testimonials';
 
 // Import local premium AI Developer WebGL showcase images
 import aiNetworkImg from './assets/ai_network.webp';
@@ -24,6 +30,52 @@ import aiBrainImg from './assets/ai_brain.webp';
 import aiGlobeImg from './assets/ai_globe.webp';
 import aiCyberImg from './assets/ai_cyber.webp';
 import aiFlowImg from './assets/ai_flow.webp';
+
+// Silicon Valley Client Testimonials List
+const testimonialsData = [
+  {
+    name: "Daniel Carter",
+    role: "Founder, NovaLabs AI",
+    text: "Ashwin's mastery of GSAP animations and Next.js is unparalleled. He transformed our complex landing page into a fluid, Awwwards-level interactive experience that loads instantly. Outstanding craftsmanship.",
+    initial: "D",
+    color: "from-blue-600 to-indigo-600"
+  },
+  {
+    name: "Sophia Reynolds",
+    role: "CEO, Visionary Studio",
+    text: "Exceptional visual design coupled with high-performance React code. The attention to detail in the micro-interactions, smooth scrolling, and custom page transitions completely redefined our digital brand.",
+    initial: "S",
+    color: "from-cyan-500 to-blue-600"
+  },
+  {
+    name: "Marcus Lee",
+    role: "Product Lead, HyperScale",
+    text: "We hired Ashwin to architect our advanced SaaS dashboard. He delivered a pixel-perfect, highly responsive interface with clean code, secure authentication, and seamless real-time AI dashboards.",
+    initial: "M",
+    color: "from-blue-500 to-teal-500"
+  },
+  {
+    name: "Emily Watson",
+    role: "Founder, PixelForge",
+    text: "The motion design and parallax scroll effects created by Ashwin are breathtaking. He has a rare ability to bridge the gap between creative visual artistry and fast, production-ready frontend code.",
+    initial: "E",
+    color: "from-indigo-500 to-purple-600"
+  },
+  {
+    name: "Ryan Mitchell",
+    role: "CTO, QuantumByte",
+    text: "Working with Ashwin was an absolute pleasure. His deep expertise in Tailwind CSS, GSAP, and full-stack performance optimization helped us achieve a perfect 100 PageSpeed score for our platform.",
+    initial: "R",
+    color: "from-cyan-600 to-indigo-500"
+  },
+  {
+    name: "Olivia Brown",
+    role: "Creative Director, ElevateX",
+    text: "Ashwin is a true creative technologist. He engineered an incredibly engaging AI computer vision dashboard for our team that surpassed all our UX and engineering requirements. Highly recommended.",
+    initial: "O",
+    color: "from-indigo-600 to-blue-500"
+  }
+];
 
 // Silicon Valley WebGL Gallery Items List
 const galleryItems = [
@@ -35,8 +87,8 @@ const galleryItems = [
   { image: aiFlowImg, text: 'Algorithmic Flow Grid' }
 ];
 
-// Register GSAP ScrollTrigger
-gsap.registerPlugin(ScrollTrigger);
+// Register GSAP ScrollTrigger & Observer
+gsap.registerPlugin(ScrollTrigger, Observer);
 
 // Custom Interactive Canvas Floating Particles Component
 function CanvasBackground() {
@@ -96,8 +148,9 @@ function CanvasBackground() {
 
     function drawLines() {
       let x1, y1, x2, y2, length, opacity;
-      for (let i in particles) {
-        for (let j in particles) {
+      const len = particles.length;
+      for (let i = 0; i < len; i++) {
+        for (let j = i + 1; j < len; j++) {
           x1 = particles[i].x;
           y1 = particles[i].y;
           x2 = particles[j].x;
@@ -390,7 +443,10 @@ function ServiceCard({ srv, isGrid }) {
 }
 
 export default function App() {
-  const activeItem = '#home';
+  const [activeSection, setActiveSection] = useState('#home');
+  const [previewMode, setPreviewMode] = useState('immersive'); // 'immersive', 'minimal-stats', 'editorial-swiss', 'storytelling-plane', 'ashwin-portrait'
+  const [phoneFrameColor, setPhoneFrameColor] = useState('dark'); // 'dark' or 'light'
+  const [currentProjectIndex, setCurrentProjectIndex] = useState(0);
 
   // Force scroll restoration to manual and scroll to the top of the page on refresh/load
   useEffect(() => {
@@ -409,11 +465,21 @@ export default function App() {
     { label: 'ABOUT', href: '#about' },
     { label: 'PROJECTS', href: '#projects' },
     { label: 'SERVICES', href: '#services' },
-    { label: 'CLIENTS', href: '#clients' },
     { label: 'TESTIMONIALS', href: '#testimonials' },
     { label: 'CONTACT', href: '#contact' },
     { label: 'HIRE ME', href: '#hire', highlight: true } // highlight prop is custom to add the blue dot
   ];
+
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   const [loading, setLoading] = useState(true);
   const [servicesViewMode, setServicesViewMode] = useState('stack');
@@ -421,56 +487,219 @@ export default function App() {
   const triggerRef = useRef(null);
   const scrollIndicatorRef = useRef(null);
 
-  // Lenis Smooth Scroll Setup
+  // Active Section Scroll Tracking using IntersectionObserver (highly robust & immune to CSS transforms/pinning)
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-      wheelMultiplier: 1
+    if (loading) return;
+
+    const sections = ['#home', '#about', '#experience', '#projects', '#services', '#testimonials', '#contact'];
+    const sectionVisibility = {};
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const id = `#${entry.target.id}`;
+        // Calculate the actual visible height of this section within the viewport
+        sectionVisibility[id] = entry.intersectionRatio * entry.boundingClientRect.height;
+      });
+
+      // Select the section with the largest visible footprint on screen
+      let maxVisibleHeight = -1;
+      let activeId = '#home';
+
+      sections.forEach((id) => {
+        const visibleHeight = sectionVisibility[id] || 0;
+        if (visibleHeight > maxVisibleHeight) {
+          maxVisibleHeight = visibleHeight;
+          activeId = id;
+        }
+      });
+
+      if (maxVisibleHeight > 0) {
+        // Map the experience timeline sub-section back to the parent 'ABOUT' link
+        if (activeId === '#experience') {
+          setActiveSection('#about');
+        } else {
+          setActiveSection(activeId);
+        }
+      }
+    }, {
+      root: null,
+      rootMargin: '-10% 0px -20% 0px', // Focus region in the middle 70% of the screen
+      threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
     });
 
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-
-    requestAnimationFrame(raf);
-    lenis.on('scroll', ScrollTrigger.update);
+    sections.forEach((id) => {
+      const el = document.querySelector(id);
+      if (el) {
+        observer.observe(el);
+      }
+    });
 
     return () => {
-      lenis.destroy();
+      observer.disconnect();
     };
+  }, [loading]);
+
+  // Lenis Smooth Scroll Setup (disabled for mobile and 3D Mode to prevent scroll lag and layout stutter)
+  useEffect(() => {
+    if (previewMode !== 'immersive') return;
+
+    const lenis = new Lenis({
+      lerp: 0.07,
+      smoothWheel: true,
+      wheelMultiplier: 1.1
+    });
+
+    window.lenis = lenis;
+
+    // Synchronize Lenis scroll updates with ScrollTrigger
+    lenis.on('scroll', ScrollTrigger.update);
+
+    // Sync Lenis frame updates via GSAP's ticker to keep pinning and smooth-scrolling in perfect synchronization
+    const updateLenis = (time) => {
+      lenis.raf(time * 1000);
+    };
+    gsap.ticker.add(updateLenis);
+    gsap.ticker.lagSmoothing(0);
+
+    return () => {
+      gsap.ticker.remove(updateLenis);
+      lenis.destroy();
+      window.lenis = null;
+    };
+  }, [previewMode]);
+
+  // Intercept all local hash links and scroll smoothly using Lenis (or browser fallback)
+  useEffect(() => {
+    const handleAnchorClick = (e) => {
+      const target = e.target.closest('a');
+      if (!target) return;
+
+      const href = target.getAttribute('href');
+      if (href && href.startsWith('#') && href.length > 1) {
+        const targetEl = document.querySelector(href);
+        if (targetEl) {
+          e.preventDefault();
+          if (window.lenis) {
+            window.lenis.scrollTo(targetEl, {
+              offset: 0,
+              duration: 1.2,
+              ease: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t))
+            });
+          } else {
+            targetEl.scrollIntoView({ behavior: 'smooth' });
+          }
+          
+          setActiveSection(href);
+          window.history.pushState(null, null, href);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleAnchorClick);
+    return () => document.removeEventListener('click', handleAnchorClick);
   }, []);
 
 
-  // Horizontal Scroll Setup (exactly 10 projects track)
+  // Horizontal Scroll Setup (exactly 10 projects track on both desktop and mobile)
   useEffect(() => {
     if (loading) return;
 
     const sections = horizontalRef.current;
     if (!sections) return;
 
-    const pin = gsap.to(sections, {
-      x: () => -(sections.scrollWidth - window.innerWidth),
-      ease: "none",
+    const totalSnaps = isDesktop ? 10 : 9;
+
+    // Create a single GSAP timeline driven by ScrollTrigger
+    const tl = gsap.timeline({
       scrollTrigger: {
         trigger: triggerRef.current,
         pin: true,
-        scrub: 1,
+        scrub: 3,
+        snap: {
+          snapTo: 1 / totalSnaps,
+          duration: { min: 0.2, max: 0.8 },
+          delay: 0.02,
+          ease: "power2.out"
+        },
         start: "top top",
         end: () => `+=${sections.scrollWidth - window.innerWidth}`,
         invalidateOnRefresh: true,
+        onUpdate: (self) => {
+          const progress = self.progress;
+          const activeIndex = Math.round(progress * totalSnaps);
+          setCurrentProjectIndex(activeIndex);
+        }
       }
     });
 
-    return () => {
-      pin.kill();
-      if (pin.scrollTrigger) {
-        pin.scrollTrigger.kill();
+    // 1. Translate the horizontal track container (duration: 1)
+    tl.to(sections, {
+      x: () => -(sections.scrollWidth - window.innerWidth),
+      ease: "none",
+      duration: 1
+    }, 0);
+
+    // 2. Add all card scale, fade, and parallax transitions directly to this single timeline
+    const cards = sections.querySelectorAll('.project-card');
+    
+    cards.forEach((card, idx) => {
+      const centerP = idx / totalSnaps;
+      
+      // Calculate start and end offsets relative to when the card is centered
+      const entryStart = Math.max(0, centerP - 0.08);
+      const exitEnd = Math.min(1, centerP + 0.08);
+
+      // Card scale & fade entry (duration runs from entryStart to centerP)
+      tl.fromTo(card,
+        { scale: 0.94, opacity: 0.8 },
+        { scale: 1, opacity: 1, ease: "power2.out", duration: centerP - entryStart },
+        entryStart
+      );
+
+      // Card scale & fade exit (duration runs from centerP to exitEnd)
+      tl.to(card,
+        { scale: 0.94, opacity: 0.8, ease: "power2.inOut", duration: exitEnd - centerP },
+        centerP
+      );
+
+      // Parallax effect on inner container
+      const inner = card.querySelector('.project-parallax-inner');
+      if (inner) {
+        const parallaxStart = Math.max(0, centerP - 0.15);
+        const parallaxEnd = Math.min(1, centerP + 0.15);
+        tl.fromTo(inner,
+          { x: 35 },
+          { x: -35, ease: "none", duration: parallaxEnd - parallaxStart },
+          parallaxStart
+        );
       }
+    });
+
+    // Touch Observer for mobile swipe support
+    let obs;
+    if (!isDesktop) {
+      obs = Observer.create({
+        target: triggerRef.current,
+        type: "touch,pointer",
+        onChangeX: (self) => {
+          // Translate horizontal swipes to vertical scroll adjustments
+          const scrollAmount = -self.deltaX * 1.6;
+          window.scrollBy({
+            top: scrollAmount,
+            behavior: 'auto'
+          });
+        }
+      });
+    }
+
+    return () => {
+      tl.kill();
+      if (tl.scrollTrigger) {
+        tl.scrollTrigger.kill();
+      }
+      if (obs) obs.kill();
     };
-  }, [loading]);
+  }, [loading, isDesktop]);
 
   // Scroll Progress and Reveal Timelines
   useEffect(() => {
@@ -683,6 +912,182 @@ export default function App() {
     "Orion Tech Solutions", "BlueNova AI", "HyperLink Digital", "VisionCraft Agency", "Nexify Technologies"
   ];
 
+  // Render the interactive storytelling paper airplane full page view
+  if (!loading && previewMode === 'storytelling-plane') {
+    return (
+      <div className="relative w-full min-h-screen bg-white">
+        <StorytellingPortfolio />
+      </div>
+    );
+  }
+
+  // Render minimal mobile view inside iphone preview on desktop (supporting multiple designs)
+  if (!loading && (previewMode === 'minimal-stats' || previewMode === 'editorial-swiss' || previewMode === 'ashwin-portrait') && isDesktop) {
+    const isSwiss = previewMode === 'editorial-swiss';
+    const isPortrait = previewMode === 'ashwin-portrait';
+    const isMinimal = previewMode === 'minimal-stats';
+    return (
+      <div className="min-h-screen w-screen bg-[#F5F5F7] font-sans flex flex-col items-center justify-center p-4 md:p-8 relative overflow-hidden select-none">
+        {/* Background Soft Blurs */}
+        <div className="absolute top-0 left-1/4 w-[400px] h-[400px] bg-blue-400/5 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-[#4F7CFF]/5 rounded-full blur-[120px] pointer-events-none" />
+
+        {/* Main Container */}
+        <div className="max-w-6xl w-full flex flex-col md:flex-row items-center justify-center gap-12 lg:gap-20 z-10">
+          
+          {/* Left Side: Editorial description of the page */}
+          <div className="flex flex-col text-center md:text-left max-w-sm md:max-w-md gap-5">
+            <div className="inline-flex self-center md:self-start items-center gap-2 px-3 py-1 bg-white border border-neutral-200/50 rounded-full shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-[#4F7CFF]"></span>
+              <span className="text-[10px] font-bold tracking-wider text-neutral-500 uppercase">
+                {isSwiss ? 'Swiss Editorial Design' : isPortrait ? 'Portrait Mobile Design' : 'Minimalist Mobile Design'}
+              </span>
+            </div>
+            
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-neutral-900 leading-tight">
+              {isSwiss ? 'Swiss Editorial Style' : isPortrait ? 'Portrait Landing Page' : 'Apple-Inspired Portfolio'}
+            </h2>
+            
+            <p className="text-sm text-neutral-500 leading-relaxed font-light">
+              {isSwiss 
+                ? 'An elegant, high-impact editorial landing page inspired by Swiss Design, Stripe keynote layouts, and modern Framer portfolios. Features bold typography and geometric wireframe art.'
+                : isPortrait 
+                ? 'A premium mobile-first landing page layout featuring a rounded hero profile card taking up 55% of the screen height, with clean, stacked minimalist typography and buttons below.'
+                : 'A premium, high-contrast minimalist landing page designed specifically for mobile viewports (390×844px). Focuses on pure white space, elegant Inter typography, and clean layouts.'}
+            </p>
+            
+            {/* Design variant selector tab inside description area */}
+            <div className="flex flex-wrap bg-neutral-200/50 p-1 rounded-full border border-neutral-300/10 mt-2 self-center md:self-start gap-1">
+              <button 
+                onClick={() => setPreviewMode('minimal-stats')}
+                className={`px-4 py-2 text-[10px] font-bold tracking-wider uppercase rounded-full transition-all duration-300 cursor-pointer border-none ${isMinimal ? 'bg-white text-[#4F7CFF] shadow-sm' : 'text-neutral-500 hover:text-black bg-transparent'}`}
+              >
+                Apple Minimal
+              </button>
+              <button 
+                onClick={() => setPreviewMode('editorial-swiss')}
+                className={`px-4 py-2 text-[10px] font-bold tracking-wider uppercase rounded-full transition-all duration-300 cursor-pointer border-none ${isSwiss ? 'bg-white text-[#4F7CFF] shadow-sm' : 'text-neutral-500 hover:text-black bg-transparent'}`}
+              >
+                Swiss Editorial
+              </button>
+              <button 
+                onClick={() => setPreviewMode('ashwin-portrait')}
+                className={`px-4 py-2 text-[10px] font-bold tracking-wider uppercase rounded-full transition-all duration-300 cursor-pointer border-none ${isPortrait ? 'bg-white text-[#4F7CFF] shadow-sm' : 'text-neutral-500 hover:text-black bg-transparent'}`}
+              >
+                Portrait Mobile
+              </button>
+            </div>
+
+            {/* Controls */}
+            <div className="flex flex-col gap-3 mt-2">
+              <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                <button 
+                  onClick={() => setPreviewMode('immersive')}
+                  className="px-5 py-2.5 bg-[#111111] hover:bg-black text-white text-xs font-semibold rounded-full shadow-sm hover:shadow active:scale-98 transition-all cursor-pointer flex items-center gap-1.5 border-none"
+                >
+                  <span>Desktop Immersive View</span>
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </button>
+                
+                <button 
+                  onClick={() => setPhoneFrameColor(phoneFrameColor === 'dark' ? 'light' : 'dark')}
+                  className="px-5 py-2.5 bg-white border border-neutral-200 text-neutral-700 text-xs font-semibold rounded-full shadow-sm hover:bg-[#F5F5F7] active:scale-98 transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <span>Device: {phoneFrameColor === 'dark' ? 'Titanium Dark' : 'Titanium Light'}</span>
+                </button>
+              </div>
+              
+              <span className="text-[11px] text-neutral-400 font-mono text-center md:text-left mt-1">
+                📱 Tip: Try scrolling inside the device mockup to experience the full landing page.
+              </span>
+            </div>
+          </div>
+
+          {/* Right Side: The Phone Simulator */}
+          <div className="relative flex items-center justify-center phone-simulator-wrapper">
+            {/* The Phone Mockup */}
+            <div className={`w-[416px] h-[870px] rounded-[52px] border-[12px] p-3 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] transition-all duration-500 ${
+              phoneFrameColor === 'dark' 
+                ? 'bg-[#1e1e1f] border-[#2d2d30] shadow-[0_30px_70px_-10px_rgba(0,0,0,0.4)]' 
+                : 'bg-[#f4f4f5] border-[#d4d4d8] shadow-[0_30px_70px_-10px_rgba(0,0,0,0.15)]'
+            }`}>
+              {/* Screen Viewport Container (exact 390x844) */}
+              <div className="w-[390px] h-[844px] rounded-[40px] bg-white overflow-hidden relative border border-neutral-100 flex flex-col shadow-inner">
+                
+                {/* iOS Status Bar */}
+                <div className="absolute top-0 left-0 right-0 h-10 px-6 flex items-center justify-between z-50 pointer-events-none select-none text-black font-semibold text-[11px]">
+                  {/* Time */}
+                  <div>12:20</div>
+                  
+                  {/* Dynamic Island */}
+                  <div className="w-24 h-6 bg-black rounded-full flex items-center justify-center">
+                    {/* Camera hole detail */}
+                    <div className="w-2.5 h-2.5 rounded-full bg-neutral-900 border border-neutral-800/40 ml-auto mr-3"></div>
+                  </div>
+                  
+                  {/* Status Icons */}
+                  <div className="flex items-center gap-1">
+                    {/* Signal */}
+                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                      <path d="M12 3c-1.2 0-2.4.4-3.4 1.1L2.2 12.3c-.3.3-.3.8 0 1.1s.8.3 1.1 0l6.4-8.2c.7-.5 1.5-.7 2.3-.7s1.6.2 2.3.7l6.4 8.2c.3.3.8.3 1.1 0s.3-.8 0-1.1L15.4 4.1C14.4 3.4 13.2 3 12 3z"/>
+                    </svg>
+                    {/* Wifi */}
+                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                      <path d="M12 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4z M4.8 13.8a10 10 0 0 1 14.4 0 M2 11a14 14 0 0 1 20 0"/>
+                    </svg>
+                    {/* Battery */}
+                    <div className="w-5 h-2.5 border border-black rounded-sm p-0.5 flex items-center">
+                      <div className="h-full w-3/4 bg-black rounded-2xs"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile Portfolio Content Frame */}
+                <div className="flex-1 w-full h-full overflow-hidden">
+                  {isSwiss ? (
+                    <EditorialMobilePortfolio />
+                  ) : isPortrait ? (
+                    <AshwinMobilePortfolio />
+                  ) : (
+                    <MinimalistMobilePortfolio />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Switch floating toggle at bottom-left */}
+        <button 
+          onClick={() => setPreviewMode('immersive')}
+          className="fixed bottom-6 left-6 z-50 px-4 py-2 bg-white/80 hover:bg-white text-neutral-800 border border-neutral-200/50 rounded-full shadow-lg backdrop-blur-md text-[11px] font-bold tracking-wider uppercase active:scale-95 transition-all cursor-pointer"
+        >
+          ← Return to Main Desktop Site
+        </button>
+      </div>
+    );
+  }
+
+  // Render minimal mobile views full screen on actual mobile devices
+  if (!loading && (previewMode === 'minimal-stats' || previewMode === 'editorial-swiss' || previewMode === 'ashwin-portrait') && !isDesktop) {
+    const isSwiss = previewMode === 'editorial-swiss';
+    const isPortrait = previewMode === 'ashwin-portrait';
+    return (
+      <div className="relative w-screen h-screen bg-white">
+        {isSwiss ? (
+          <EditorialMobilePortfolio />
+        ) : isPortrait ? (
+          <AshwinMobilePortfolio />
+        ) : (
+          <MinimalistMobilePortfolio />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full min-h-screen bg-[#fafafa] font-sans overflow-x-hidden">
       {loading && <SplitLoadingScreen onComplete={() => {
@@ -695,11 +1100,12 @@ export default function App() {
       
       <PillNav 
         items={pillNavItems}
-        activeHref={activeItem}
+        activeHref={activeSection}
         baseColor="#ffffff"
         pillColor="#111111"
         hoveredPillTextColor="#ffffff"
         pillTextColor="#555555"
+        initialLoadAnimation={false}
       />
 
       <PremiumHero />
@@ -819,18 +1225,22 @@ export default function App() {
       <TechStack />
 
       {/* 3. FEATURED PROJECTS: Horizontal scrolling pinned panels (exactly 10 projects!) */}
-      <div id="projects" ref={triggerRef} className="relative bg-black overflow-hidden">
+      <div id="projects" ref={triggerRef} className="relative bg-black overflow-hidden h-screen w-full z-10">
         <div 
           ref={horizontalRef}
-          className="h-screen flex items-center gap-12 pl-12 sm:pl-24 pr-48"
-          style={{ width: "max-content" }}
+          className="h-full flex flex-nowrap items-center will-change-transform gap-4 lg:gap-12"
+          style={{ 
+            width: "max-content",
+            paddingLeft: isDesktop ? "calc((100vw - 440px) / 2)" : "4vw",
+            paddingRight: isDesktop ? "calc((100vw - 440px) / 2)" : "4vw"
+          }}
         >
           {/* Section Introduction */}
-          <div className="flex flex-col gap-4 w-[320px] sm:w-[400px] flex-shrink-0">
+          <div className="flex flex-col gap-4 w-[92vw] sm:w-[400px] flex-shrink-0 project-card select-none">
             <span className="text-blue-500 font-bold uppercase tracking-[0.2em] text-[10px] md:text-xs">03 / SHOWCASE</span>
             <h2 className="text-white text-3xl sm:text-5xl font-light tracking-tight leading-[1.1]">Selected<br />Featured<br />Projects.</h2>
             <p className="text-neutral-400 font-light text-xs sm:text-sm mt-2 max-w-xs leading-relaxed">
-              Scroll downward to slide through Ashwin's 10 premium sample applications demonstrating the AI-development crossroad.
+              Scroll downward to slide through Ashwin's 10 sample applications.
             </p>
           </div>
 
@@ -838,61 +1248,80 @@ export default function App() {
           {projectsData.map((project) => (
             <div 
               key={project.num}
-              className="w-[85vw] sm:w-[440px] h-[76vh] flex-shrink-0 bg-white/5 border border-white/10 p-6 sm:p-10 rounded-[2rem] backdrop-blur-md flex flex-col justify-between group hover:border-white/20 transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
+              className="project-card w-[92vw] sm:w-[440px] h-[72vh] min-h-[480px] sm:min-h-[560px] flex-shrink-0 bg-white/5 border border-white/10 p-6 sm:p-10 rounded-[2rem] flex flex-col justify-between group hover:border-white/20 transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.3)] snap-center snap-always will-change-transform overflow-hidden relative"
             >
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <span className={`text-xs font-mono bg-gradient-to-r ${project.color} bg-clip-text text-transparent font-semibold tracking-wider`}>
-                    PROJECT {project.num}
-                  </span>
-                  <span className="text-xs text-white/30 font-mono">02 / 05 / 2026</span>
-                </div>
-                
-                <h3 className="text-white text-2xl sm:text-3xl font-light tracking-tight group-hover:text-blue-300 transition-colors mt-2">
-                  {project.title}
-                </h3>
-                
-                <p className="text-neutral-400 font-light text-sm sm:text-base leading-relaxed mt-2">
-                  {project.desc}
-                </p>
-
-                {/* Performance & Status Metrics */}
-                <div className="flex flex-col gap-2 mt-4">
-                  {project.performance && project.performance.map((metric, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${project.color}`} />
-                      <span className="text-white/80 text-xs sm:text-sm font-mono">{metric}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Tech Stack badges */}
-                <div className="flex flex-wrap gap-2.5 mt-4">
-                  {project.tech.map((badge) => (
-                    <span key={badge} className="bg-white/5 border border-white/10 text-white/80 text-[10px] sm:text-xs px-3 py-1.5 rounded-full font-mono">
-                      {badge}
+              {/* Inner Parallax Container */}
+              <div className="project-parallax-inner flex flex-col justify-between h-full w-full pointer-events-auto">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-mono bg-gradient-to-r ${project.color} bg-clip-text text-transparent font-semibold tracking-wider`}>
+                      PROJECT {project.num}
                     </span>
-                  ))}
-                  {project.status && (
-                    <span className="bg-blue-500/10 border border-blue-500/30 text-blue-300 text-[10px] sm:text-xs px-3 py-1.5 rounded-full font-mono font-semibold">
-                      • {project.status}
-                    </span>
-                  )}
-                </div>
-              </div>
+                    <span className="text-xs text-white/30 font-mono">02 / 05 / 2026</span>
+                  </div>
+                  
+                  <h3 className="text-white text-2xl sm:text-3xl font-light tracking-tight group-hover:text-blue-300 transition-colors mt-2">
+                    {project.title}
+                  </h3>
+                  
+                  <p className="text-neutral-400 font-light text-sm sm:text-base leading-relaxed mt-2">
+                    {project.desc}
+                  </p>
 
-              {/* Badges and links */}
-              <div className="flex items-center justify-between border-t border-white/10 pt-4">
-                <button className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors text-xs font-semibold uppercase tracking-wider">
-                  Live Demo
-                  <svg className="w-3.5 h-3.5 fill-none stroke-current stroke-2 transition-transform duration-300 group-hover:translate-x-1.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                  </svg>
-                </button>
-                <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Source Available</span>
+                  {/* Performance & Status Metrics */}
+                  <div className="flex flex-col gap-2 mt-4">
+                    {project.performance && project.performance.map((metric, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${project.color}`} />
+                        <span className="text-white/80 text-xs sm:text-sm font-mono">{metric}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Tech Stack badges */}
+                  <div className="flex flex-wrap gap-2.5 mt-4">
+                    {project.tech.map((badge) => (
+                      <span key={badge} className="bg-white/5 border border-white/10 text-white/80 text-[10px] sm:text-xs px-3 py-1.5 rounded-full font-mono">
+                        {badge}
+                      </span>
+                    ))}
+                    {project.status && (
+                      <span className="bg-blue-500/10 border border-blue-500/30 text-blue-300 text-[10px] sm:text-xs px-3 py-1.5 rounded-full font-mono font-semibold">
+                        • {project.status}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Badges and links */}
+                <div className="flex items-center justify-between border-t border-white/10 pt-4 mt-6">
+                  <button className="flex items-center gap-2 text-neutral-400 hover:text-white transition-colors text-xs font-semibold uppercase tracking-wider">
+                    Live Demo
+                    <svg className="w-3.5 h-3.5 fill-none stroke-current stroke-2 transition-transform duration-300 group-hover:translate-x-1.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </svg>
+                  </button>
+                  <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Source Available</span>
+                </div>
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Premium Project Scroll Progress Indicator Overlay */}
+        <div className="absolute bottom-6 left-0 right-0 z-30 flex flex-col items-center gap-2 px-6 pointer-events-none">
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-white text-xs font-mono tracking-widest">
+              {String(Math.min(10, Math.max(1, currentProjectIndex))).padStart(2, '0')}
+            </span>
+            <div className="w-32 h-[2px] bg-white/20 rounded-full overflow-hidden relative">
+              <div 
+                className="absolute top-0 bottom-0 left-0 bg-blue-500 transition-all duration-300 ease-out rounded-full"
+                style={{ width: `${(Math.min(10, Math.max(1, currentProjectIndex)) / 10) * 100}%` }}
+              />
+            </div>
+            <span className="text-white/40 text-xs font-mono tracking-widest">10</span>
+          </div>
         </div>
       </div>
 
@@ -1004,7 +1433,7 @@ export default function App() {
             stackPosition="24%" 
             scaleEndPosition="12%" 
             baseScale={0.88} 
-            blurAmount={3}
+            blurAmount={0}
           >
             {servicesData.map((srv) => (
               <ScrollStackItem key={srv.id}>
@@ -1038,88 +1467,9 @@ export default function App() {
             </p>
           </div>
 
-          {/* Interactive Folder for Client Reviews */}
-          <div className="flex justify-center items-center pt-[350px] pb-[350px] h-[1200px]">
-            <Folder
-              color="#FFC107"
-              size={1}
-              className="mt-10"
-              items={[
-                  {
-                    name: "Daniel Carter",
-                    role: "Founder, NovaLabs AI",
-                    text: "Ashwin's mastery of GSAP animations and Next.js is unparalleled. He transformed our complex landing page into a fluid, Awwwards-level interactive experience that loads instantly. Outstanding craftsmanship.",
-                    initial: "D",
-                    color: "from-blue-600 to-indigo-600"
-                  },
-                  {
-                    name: "Sophia Reynolds",
-                    role: "CEO, Visionary Studio",
-                    text: "Exceptional visual design coupled with high-performance React code. The attention to detail in the micro-interactions, smooth scrolling, and custom page transitions completely redefined our digital brand.",
-                    initial: "S",
-                    color: "from-cyan-500 to-blue-600"
-                  },
-                  {
-                    name: "Marcus Lee",
-                    role: "Product Lead, HyperScale",
-                    text: "We hired Ashwin to architect our advanced SaaS dashboard. He delivered a pixel-perfect, highly responsive interface with clean code, secure authentication, and seamless real-time AI dashboards.",
-                    initial: "M",
-                    color: "from-blue-500 to-teal-500"
-                  },
-                  {
-                    name: "Emily Watson",
-                    role: "Founder, PixelForge",
-                    text: "The motion design and parallax scroll effects created by Ashwin are breathtaking. He has a rare ability to bridge the gap between creative visual artistry and fast, production-ready frontend code.",
-                    initial: "E",
-                    color: "from-indigo-500 to-purple-600"
-                  },
-                  {
-                    name: "Ryan Mitchell",
-                    role: "CTO, QuantumByte",
-                    text: "Working with Ashwin was an absolute pleasure. His deep expertise in Tailwind CSS, GSAP, and full-stack performance optimization helped us achieve a perfect 100 PageSpeed score for our platform.",
-                    initial: "R",
-                    color: "from-cyan-600 to-indigo-500"
-                  },
-                  {
-                    name: "Olivia Brown",
-                    role: "Creative Director, ElevateX",
-                    text: "Ashwin is a true creative technologist. He engineered an incredibly engaging AI computer vision dashboard for our team that surpassed all our UX and engineering requirements. Highly recommended.",
-                    initial: "O",
-                    color: "from-indigo-600 to-blue-500"
-                  }
-                ].map((client, index) => (
-                  <div 
-                    key={index} 
-                    className="w-full h-full bg-[#0a0b0d]/70 backdrop-blur-xl hover:bg-[#0a0b0d] hover:shadow-[0_20px_50px_rgba(59,130,246,0.15)] transition-all duration-500 p-8 flex flex-col justify-between gap-6 cursor-pointer"
-                  >
-                    <div className="flex flex-col gap-4">
-                      {/* Rating 5-stars with soft cyan neon glow */}
-                      <div className="flex gap-1 text-cyan-400">
-                        {[...Array(5)].map((_, i) => (
-                          <svg key={i} className="w-4.5 h-4.5 fill-current drop-shadow-[0_0_4px_rgba(34,211,238,0.4)]" viewBox="0 0 24 24">
-                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                          </svg>
-                        ))}
-                      </div>
-
-                      <p className="text-neutral-300 font-light text-xs sm:text-sm leading-relaxed italic">
-                        “{client.text}”
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-3 border-t border-white/5 pt-4 mt-2">
-                      <div className={`w-10 h-10 rounded-full bg-gradient-to-tr ${client.color} flex items-center justify-center font-bold text-white text-sm shadow-[0_0_15px_rgba(59,130,246,0.15)]`}>
-                        {client.initial}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-semibold text-white">{client.name}</span>
-                        <span className="text-[10px] font-mono text-neutral-500 tracking-wider mt-0.5">{client.role}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              }
-            />
+          {/* Premium Staggered Testimonials Showcase (both Desktop and Mobile) */}
+          <div className="w-full relative pointer-events-auto mt-10">
+            <StaggerTestimonials />
           </div>
 
           <div 
@@ -1166,42 +1516,43 @@ export default function App() {
             </div>
           </div>
 
-          <div className="pt-28 mt-12 w-full flex flex-col gap-10 relative z-10">
-            <div className="scroll-reveal flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div className="flex flex-col gap-3">
-                <span className="text-blue-500 font-bold uppercase tracking-[0.2em] text-[10px] md:text-xs">06 / CREATIVE SHOWCASE</span>
-                <h2 className="text-white text-3xl md:text-4xl font-light tracking-tight leading-tight">3D WebGL Showcase</h2>
+          {isDesktop && (
+            <div className="pt-28 mt-12 w-full flex flex-col gap-10 relative z-10">
+              <div className="scroll-reveal flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="flex flex-col gap-3">
+                  <span className="text-blue-500 font-bold uppercase tracking-[0.2em] text-[10px] md:text-xs">06 / CREATIVE SHOWCASE</span>
+                  <h2 className="text-white text-3xl md:text-4xl font-light tracking-tight leading-tight">3D WebGL Showcase</h2>
+                </div>
+                <p className="text-neutral-400 font-light text-xs sm:text-sm max-w-md leading-relaxed">
+                  Drag horizontally or scroll to rotate this high-performance WebGL cylindrical gallery. Engineered with OGL shaders for real-time wave deformations.
+                </p>
               </div>
-              <p className="text-neutral-400 font-light text-xs sm:text-sm max-w-md leading-relaxed">
-                Drag horizontally or scroll to rotate this high-performance WebGL cylindrical gallery. Engineered with OGL shaders for real-time wave deformations.
-              </p>
-            </div>
 
-            {/* True 100vw full-bleed — breaks out of every parent container */}
-            <div
-              className="scroll-reveal h-[560px] overflow-hidden bg-neutral-950 relative"
-              style={{
-                width: '100vw',
-                marginLeft: 'calc(50% - 50vw)'
-              }}
-            >
-              <CircularGallery 
-                items={galleryItems}
-                bend={3} 
-                textColor="#22d3ee" 
-                borderRadius={0.05} 
-                font="bold 28px JetBrains Mono, monospace" 
-                scrollSpeed={2.5}
-                autoScrollSpeed={0.3}
-              />
+              {/* True 100vw full-bleed — breaks out of every parent container */}
+              <div
+                className="scroll-reveal h-[560px] overflow-hidden bg-neutral-950 relative"
+                style={{
+                  width: '100vw',
+                  marginLeft: 'calc(50% - 50vw)'
+                }}
+              >
+                <CircularGallery 
+                  items={galleryItems}
+                  bend={3} 
+                  textColor="#22d3ee" 
+                  borderRadius={0.05} 
+                  font="bold 28px JetBrains Mono, monospace" 
+                  scrollSpeed={2.5}
+                  autoScrollSpeed={0.05}
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
 
       <ContactCTA />
       <ContactForm />
-
 
       {/* 8. FOOTER */}
       <PremiumFooter />

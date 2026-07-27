@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
-import avatarImg from '../assets/avatar_cartoon.webp';
 import startupSfx from '../assets/audio/startup.wav';
 import humSfx from '../assets/audio/hum.wav';
 import tickSfx from '../assets/audio/tick.wav';
@@ -19,7 +18,6 @@ const SplitLoadingScreen = ({ onComplete }) => {
   const leftPanelRef = useRef(null);
   const rightPanelRef = useRef(null);
   const contentRef = useRef(null);
-  const characterRef = useRef(null);
   const textRef = useRef(null);
   const subtextRef = useRef(null);
   const progressBarRef = useRef(null);
@@ -72,15 +70,19 @@ const SplitLoadingScreen = ({ onComplete }) => {
   useEffect(() => {
     if (!isInitialized) return;
     const messageInterval = setInterval(() => {
-      gsap.to(subtextRef.current, {
-        opacity: 0,
-        y: -10,
-        duration: 0.3,
-        onComplete: () => {
-          setMessageIndex((prev) => (prev + 1) % loadingMessages.length);
-          gsap.fromTo(subtextRef.current, { y: 10 }, { opacity: 1, y: 0, duration: 0.3 });
-        }
-      });
+      if (subtextRef.current) {
+        gsap.to(subtextRef.current, {
+          opacity: 0,
+          y: -10,
+          duration: 0.3,
+          onComplete: () => {
+            setMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+            if (subtextRef.current) {
+              gsap.fromTo(subtextRef.current, { y: 10 }, { opacity: 1, y: 0, duration: 0.3 });
+            }
+          }
+        });
+      }
     }, 1200);
     return () => clearInterval(messageInterval);
   }, [isInitialized]);
@@ -90,8 +92,16 @@ const SplitLoadingScreen = ({ onComplete }) => {
     const handleMouseMove = (e) => {
       const x = (e.clientX / window.innerWidth - 0.5) * 20;
       const y = (e.clientY / window.innerHeight - 0.5) * 20;
-      gsap.to('.parallax-bg', { x, y, duration: 1, ease: 'power2.out' });
-      gsap.to('.parallax-fg', { x: x * 1.5, y: y * 1.5, duration: 1, ease: 'power2.out' });
+      
+      const bgs = containerRef.current?.querySelectorAll('.parallax-bg');
+      const fgs = containerRef.current?.querySelectorAll('.parallax-fg');
+      
+      if (bgs && bgs.length > 0) {
+        gsap.to(bgs, { x, y, duration: 1, ease: 'power2.out', overwrite: 'auto' });
+      }
+      if (fgs && fgs.length > 0) {
+        gsap.to(fgs, { x: x * 1.5, y: y * 1.5, duration: 1, ease: 'power2.out', overwrite: 'auto' });
+      }
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
@@ -101,21 +111,7 @@ const SplitLoadingScreen = ({ onComplete }) => {
   useEffect(() => {
     document.body.style.overflow = 'hidden';
 
-    // Set initial GSAP centering to avoid conflict with Tailwind translate classes
-    // Optically centered: shifted left by 6.73% to align head center perfectly with split divider
-    gsap.set(characterRef.current, { xPercent: -56.73, yPercent: -50 });
-
-    // Idle character animation
-    const idleTween = gsap.to(characterRef.current, {
-      y: -15,
-      duration: 2,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut'
-    });
-
     return () => {
-      idleTween.kill();
       document.body.style.overflow = 'auto';
     };
   }, []);
@@ -150,29 +146,53 @@ const SplitLoadingScreen = ({ onComplete }) => {
       }
     });
 
+    // Resolve animation targets dynamically or fallback to DOM queries to prevent null warnings
+    const textEl = textRef.current || contentRef.current?.querySelector('h1');
+    const subtextEl = subtextRef.current || contentRef.current?.querySelector('.h-7 p') || contentRef.current?.querySelector('p');
+    const progressBarEl = progressBarRef.current || contentRef.current?.querySelector('.mt-8');
+
     // Initial setup
-    gsap.set([textRef.current, subtextRef.current, progressBarRef.current], { opacity: 0, y: 20 });
-    gsap.set(dividerRef.current, { opacity: 1 });
-    gsap.set(leftPanelRef.current, { x: 0 });
-    gsap.set(rightPanelRef.current, { x: 0 });
+    const initialElements = [textEl, subtextEl, progressBarEl].filter(Boolean);
+    if (initialElements.length > 0) {
+      gsap.set(initialElements, { opacity: 0, y: 20 });
+    }
+    if (dividerRef.current) gsap.set(dividerRef.current, { opacity: 1 });
+    if (leftPanelRef.current) gsap.set(leftPanelRef.current, { x: 0 });
+    if (rightPanelRef.current) gsap.set(rightPanelRef.current, { x: 0 });
 
     // Animation sequence
-    tl.to(textRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' })
-      .to(subtextRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.4')
-      .to(progressBarRef.current, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, '-=0.3')
-      // Wait for progress to hit 100%
-      .to({}, { duration: 2.0 })
-      // Fade out content
-      .to(contentRef.current, { opacity: 0, scale: 0.9, duration: 0.8, ease: 'power3.inOut' })
-      // Slide panels open & boom
-      .to(dividerRef.current, { opacity: 0, scaleY: 0, duration: 0.3 }, 'split-=0.2')
-      .to(leftPanelRef.current, { 
+    if (textEl) {
+      tl.to(textEl, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' });
+    }
+    if (subtextEl) {
+      tl.to(subtextEl, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '-=0.4');
+    }
+    if (progressBarEl) {
+      tl.to(progressBarEl, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, '-=0.3');
+    }
+
+    // Wait for progress to hit 100%
+    tl.to({}, { duration: 2.0 });
+
+    // Fade out content
+    if (contentRef.current) {
+      tl.to(contentRef.current, { opacity: 0, scale: 0.9, duration: 0.8, ease: 'power3.inOut' });
+    }
+    // Slide panels open & boom
+    if (dividerRef.current) {
+      tl.to(dividerRef.current, { opacity: 0, scaleY: 0, duration: 0.3 }, 'split-=0.2');
+    }
+    if (leftPanelRef.current) {
+      tl.to(leftPanelRef.current, { 
         x: '-100%', 
         duration: 1.4, 
         ease: 'power4.inOut',
         onStart: () => playSound(completeAudio, false, 0.9)
-      }, 'split')
-      .to(rightPanelRef.current, { x: '100%', duration: 1.4, ease: 'power4.inOut' }, 'split');
+      }, 'split');
+    }
+    if (rightPanelRef.current) {
+      tl.to(rightPanelRef.current, { x: '100%', duration: 1.4, ease: 'power4.inOut' }, 'split');
+    }
 
     return () => {
       clearInterval(progressInterval);
@@ -226,7 +246,7 @@ const SplitLoadingScreen = ({ onComplete }) => {
         {/* Left Dark Panel */}
         <div 
           ref={leftPanelRef}
-          className="relative w-1/2 h-full bg-[#03050a] overflow-hidden shadow-[inset_-20px_0_50px_rgba(0,0,0,0.5)]"
+          className="relative w-1/2 h-full bg-[#000000] overflow-hidden shadow-[inset_-20px_0_50px_rgba(0,0,0,0.5)]"
         >
           <div className="absolute inset-0 bg-blue-500/5 mix-blend-screen parallax-bg" />
           <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] parallax-fg" />
@@ -250,7 +270,7 @@ const SplitLoadingScreen = ({ onComplete }) => {
         {/* Right Light Panel */}
         <div 
           ref={rightPanelRef}
-          className="relative w-1/2 h-full bg-neutral-50 overflow-hidden shadow-[inset_20px_0_50px_rgba(0,0,0,0.05)]"
+          className="relative w-1/2 h-full bg-[#ffffff] overflow-hidden shadow-[inset_20px_0_50px_rgba(0,0,0,0.05)]"
         >
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-blue-400/10 rounded-full blur-[100px] parallax-bg" />
           <div className="absolute top-1/3 left-1/4 w-[300px] h-[300px] bg-violet-400/10 rounded-full blur-[100px] parallax-fg" />
@@ -265,114 +285,9 @@ const SplitLoadingScreen = ({ onComplete }) => {
           className="absolute inset-0 flex flex-col items-center justify-center z-30 pointer-events-none"
         >
           
-          {/* Character (positioned upper-center) */}
-          <div 
-            ref={characterRef}
-            className="absolute top-[36%] left-1/2 w-64 h-64 md:w-80 md:h-80"
-          >
-            {/* Cinematic Bloom behind character */}
-            <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-3xl animate-pulse mix-blend-screen" />
-            <img 
-              src={avatarImg} 
-              alt="AI Assistant" 
-              className="avatar-img avatar-mask relative w-full h-full object-contain drop-shadow-[0_0_40px_rgba(59,130,246,0.5)]"
-            />
-          </div>
 
-          {/* Glowing Connection Lines from Character to Holographic Box */}
-          <div className="absolute top-[48%] left-1/2 -translate-x-1/2 h-[6%] w-[1px] bg-gradient-to-b from-blue-500/40 via-cyan-400/80 to-blue-500/40 shadow-[0_0_8px_rgba(59,130,246,0.6)] z-20 overflow-hidden">
-            {/* Pulsing energy dot flowing down */}
-            <div className="w-full h-4 bg-gradient-to-b from-transparent via-white to-transparent animate-[flowDown_1.5s_infinite_linear]" />
-          </div>
-
-          {/* Holographic Interface Box (Jarvis inspired) */}
-          <div 
-            className="absolute top-[54%] left-1/2 -translate-x-1/2 w-80 md:w-96 h-36 rounded-2xl border border-blue-500/35 bg-gradient-to-br from-[#060814]/85 to-[#0b1026]/40 backdrop-blur-2xl shadow-[0_0_40px_rgba(59,130,246,0.2),inset_0_0_20px_rgba(59,130,246,0.15)] p-4 flex flex-col justify-between overflow-hidden z-20 pointer-events-auto transition-all duration-500 hover:scale-[1.03] hover:border-blue-400 hover:shadow-[0_0_50px_rgba(59,130,246,0.4)] group"
-          >
-            {/* Cinematic Bloom Underneath Card */}
-            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-48 h-10 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
-
-            {/* Glowing Scan Line moving down */}
-            <div className="absolute left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60 shadow-[0_0_8px_rgba(34,211,238,0.8)] animate-[scan_3.5s_infinite_ease-in-out]" />
-
-            {/* Matrix Particles Overlay (subtle background grid dots) */}
-            <div className="absolute inset-0 bg-[radial-gradient(rgba(59,130,246,0.08)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none" />
-
-            {/* Top Row: Title, Status Indicator, Tiny HUD spinner */}
-            <div className="flex items-center justify-between z-10 border-b border-white/10 pb-2">
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-                </span>
-                <span className="text-[9px] md:text-[10px] font-mono font-black tracking-[0.25em] text-cyan-400 uppercase">
-                  DEEPMIND OS: CONNECTED
-                </span>
-              </div>
-              
-              {/* Spinning mini HUD circular graph */}
-              <div className="relative w-5 h-5 flex items-center justify-center">
-                <div className="absolute inset-0 rounded-full border border-dashed border-cyan-400/40 animate-[spin_6s_linear_infinite]" />
-                <div className="absolute inset-0.5 rounded-full border-t border-blue-400 animate-[spin_2s_linear_infinite]" />
-                <div className="w-1.5 h-1.5 rounded-full bg-white/80 animate-pulse" />
-              </div>
-            </div>
-
-            {/* Middle Row: Live Animated Waveform, Diagnostics */}
-            <div className="flex items-center gap-4 py-2.5 z-10">
-              {/* Dynamic Tech Diagnostics */}
-              <div className="flex flex-col gap-1 w-1/2 text-[9px] font-mono text-neutral-400 leading-tight">
-                <div className="flex justify-between">
-                  <span>NEURAL INTEGRITY:</span>
-                  <span className="text-white font-bold animate-pulse">98.6%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>SYNAPSE LATENCY:</span>
-                  <span className="text-cyan-400 font-bold">1.2ms</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>SYSTEM STATUS:</span>
-                  <span className="text-emerald-400 font-bold tracking-wider animate-pulse">ONLINE</span>
-                </div>
-              </div>
-
-              {/* Glowing Real-time SVG Waveform Graph */}
-              <div className="w-1/2 h-9 relative overflow-hidden bg-blue-950/20 border border-blue-500/10 rounded-lg flex items-center justify-center px-1">
-                <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
-                  <path 
-                    d="M 0 20 Q 10 5, 20 20 T 40 20 T 60 20 T 80 20 T 100 20" 
-                    fill="none" 
-                    stroke="rgba(34, 211, 238, 0.8)" 
-                    strokeWidth="1.5"
-                    className="animate-[wave_3s_infinite_linear]"
-                    style={{ strokeDasharray: '300', strokeDashoffset: '0' }}
-                  />
-                  <path 
-                    d="M 0 20 Q 15 35, 30 20 T 60 20 T 90 20 T 100 20" 
-                    fill="none" 
-                    stroke="rgba(59, 130, 246, 0.4)" 
-                    strokeWidth="1"
-                    className="animate-[wave-reverse_4s_infinite_linear]"
-                    style={{ strokeDasharray: '300', strokeDashoffset: '0' }}
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {/* Bottom Row: Streaming logs / Scrolling Diagnostics */}
-            <div className="z-10 bg-black/40 border border-white/5 rounded-md p-1.5 flex items-center justify-between text-[8px] font-mono text-neutral-400 overflow-hidden">
-              <div className="flex items-center gap-1.5 overflow-hidden whitespace-nowrap w-[70%]">
-                <span className="text-cyan-400 animate-pulse">&gt;</span>
-                <span className="animate-[scrollText_12s_infinite_linear] inline-block tracking-widest uppercase">
-                  INITIALIZING PORTFOLIO INTERFACE... NEURAL SYNC ACTIVE... SYSTEM STABLE...
-                </span>
-              </div>
-              <span className="text-neutral-400 text-[7px] font-bold tracking-wider pl-2 border-l border-white/10 shrink-0 uppercase">SECURE CONNECT</span>
-            </div>
-          </div>
-
-          {/* Interactive Core system initializer or Progress bar (Positioned at bottom, always visible) */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center w-full max-w-sm px-6">
+          {/* Interactive Core system initializer or Progress bar (Centered in screen) */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center w-full max-w-sm px-6">
             {!isInitialized ? (
               <button 
                 onClick={handleInitialize}
@@ -397,9 +312,6 @@ const SplitLoadingScreen = ({ onComplete }) => {
               <div className="flex flex-col items-center w-full">
                 {/* Text */}
                 <div className="text-center z-10 flex flex-col items-center">
-                  <h1 ref={textRef} className="text-4xl md:text-5xl font-bold tracking-tight text-white mix-blend-difference mb-3">
-                    Hi 👋
-                  </h1>
                   <div className="h-7 overflow-hidden rounded-full border border-white/10 bg-[#090a10] shadow-[0_8px_25px_rgba(0,0,0,0.3)]">
                     <p ref={subtextRef} className="text-[10px] md:text-xs font-mono tracking-widest text-neutral-300 uppercase px-4 py-1.5">
                       {loadingMessages[messageIndex]}

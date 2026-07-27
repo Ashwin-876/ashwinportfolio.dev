@@ -131,7 +131,7 @@ const Folder = ({ color = '#5227FF', size = 1, items = [], className = '' }) => 
                   ? {
                       '--magnet-x': `${paperOffsets[i]?.x || 0}px`,
                       '--magnet-y': `${paperOffsets[i]?.y || 0}px`,
-                      zIndex: hoveredIndex === i ? 50 : i + 1,
+                      zIndex: hoveredIndex === i ? 50 : 30 + i,
                     }
                   : { zIndex: i + 1 }
               }

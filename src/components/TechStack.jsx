@@ -74,6 +74,7 @@ const HudPanel = ({ title, icon: Icon, skills, colorClass, isCenter = false, ali
   }, []);
 
   const handleMouseMove = (e) => {
+    if (window.matchMedia('(pointer: coarse)').matches) return;
     const wrapper = wrapperRef.current;
     if (!wrapper || !xTo.current) return;
     
@@ -103,7 +104,7 @@ const HudPanel = ({ title, icon: Icon, skills, colorClass, isCenter = false, ali
       ref={wrapperRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className={`relative w-full h-full perspective-[1200px] group transition-all duration-500 ease-out ${scaleClass}`}
+      className={`relative w-full h-full perspective-[1200px] group transition-all duration-500 ease-out will-change-transform ${scaleClass}`}
     >
       <div 
         ref={cardRef}
@@ -171,7 +172,9 @@ const HudPanel = ({ title, icon: Icon, skills, colorClass, isCenter = false, ali
                     
                     {/* Scrolling data dots */}
                     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                      <div className="absolute top-[1px] w-[3px] h-[2px] bg-white rounded-full animate-data-stream opacity-80" />
+                      <div className="absolute top-[1px] left-0 w-full h-[2px] animate-data-stream opacity-80">
+                        <div className="w-[3px] h-full bg-white rounded-full" />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -198,6 +201,7 @@ export default function TechStack() {
   useEffect(() => {
     if (!containerRef.current) return;
     const cards = containerRef.current.querySelectorAll('.tech-panel-wrapper');
+    if (!cards.length) return;
     
     const anim = gsap.fromTo(cards,
       { y: 150, opacity: 0, scale: 0.8 },

@@ -426,6 +426,17 @@ class App {
     this.scroll.last = this.scroll.current;
     this.raf = window.requestAnimationFrame(this.update.bind(this));
   }
+  pause() {
+    if (this.raf) {
+      window.cancelAnimationFrame(this.raf);
+      this.raf = null;
+    }
+  }
+  resume() {
+    if (!this.raf) {
+      this.update();
+    }
+  }
   addEventListeners() {
     this.boundOnResize = this.onResize.bind(this);
     this.boundOnWheel = this.onWheel.bind(this);
@@ -443,7 +454,7 @@ class App {
     window.addEventListener('touchend', this.boundOnTouchUp);
   }
   destroy() {
-    window.cancelAnimationFrame(this.raf);
+    this.pause();
     window.removeEventListener('resize', this.boundOnResize);
     window.removeEventListener('mousewheel', this.boundOnWheel);
     window.removeEventListener('wheel', this.boundOnWheel);
@@ -472,9 +483,25 @@ export default function CircularGallery({
   const containerRef = useRef(null);
   useEffect(() => {
     const app = new App(containerRef.current, { items, bend, textColor, borderRadius, font, scrollSpeed, scrollEase, autoScrollSpeed });
+    
+    // Pause rendering loop initially
+    app.pause();
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        app.resume();
+      } else {
+        app.pause();
+      }
+    }, { threshold: 0.02 });
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
     return () => {
+      observer.disconnect();
       app.destroy();
     };
   }, [items, bend, textColor, borderRadius, font, scrollSpeed, scrollEase, autoScrollSpeed]);
-  return <div className="circular-gallery" ref={containerRef} />;
-}
+  return <div className="circular-gallery" ref={containerRef} />;}

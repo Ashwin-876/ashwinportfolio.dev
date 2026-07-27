@@ -244,12 +244,24 @@ const PillNav = ({
 
     if (hamburger) {
       const lines = hamburger.querySelectorAll('.hamburger-line');
-      if (newState) {
-        gsap.to(lines[0], { rotation: 45, y: 3, duration: 0.3, ease });
-        gsap.to(lines[1], { rotation: -45, y: -3, duration: 0.3, ease });
+      if (lines.length === 3) {
+        if (newState) {
+          gsap.to(lines[0], { rotation: 45, y: 4.5, duration: 0.3, ease });
+          gsap.to(lines[1], { opacity: 0, duration: 0.2, ease });
+          gsap.to(lines[2], { rotation: -45, y: -4.5, duration: 0.3, ease });
+        } else {
+          gsap.to(lines[0], { rotation: 0, y: 0, duration: 0.3, ease });
+          gsap.to(lines[1], { opacity: 1, duration: 0.2, ease });
+          gsap.to(lines[2], { rotation: 0, y: 0, duration: 0.3, ease });
+        }
       } else {
-        gsap.to(lines[0], { rotation: 0, y: 0, duration: 0.3, ease });
-        gsap.to(lines[1], { rotation: 0, y: 0, duration: 0.3, ease });
+        if (newState) {
+          gsap.to(lines[0], { rotation: 45, y: 3, duration: 0.3, ease });
+          gsap.to(lines[1], { rotation: -45, y: -3, duration: 0.3, ease });
+        } else {
+          gsap.to(lines[0], { rotation: 0, y: 0, duration: 0.3, ease });
+          gsap.to(lines[1], { rotation: 0, y: 0, duration: 0.3, ease });
+        }
       }
     }
 
@@ -286,6 +298,34 @@ const PillNav = ({
     onMobileMenuClick?.();
   };
 
+  // Synchronize GSAP animations with activeHref changes (enables smooth sliding/highlight transitions on scroll)
+  useEffect(() => {
+    if (!items || !items.length) return;
+    
+    items.forEach((item, i) => {
+      const tl = tlRefs.current[i];
+      if (!tl) return;
+
+      activeTweenRefs.current[i]?.kill();
+      
+      if (item.href === activeHref) {
+        // Animate the active item to full highlight state
+        activeTweenRefs.current[i] = tl.tweenTo(tl.duration(), {
+          duration: 0.35,
+          ease: 'power3.out',
+          overwrite: 'auto'
+        });
+      } else {
+        // Return other items to their default non-active states
+        activeTweenRefs.current[i] = tl.tweenTo(0, {
+          duration: 0.25,
+          ease: 'power3.out',
+          overwrite: 'auto'
+        });
+      }
+    });
+  }, [activeHref, items]);
+
   const cssVars = {
     '--base': baseColor,
     '--pill-bg': pillColor,
@@ -311,14 +351,17 @@ const PillNav = ({
           onMouseEnter={handleLogoEnter}
           ref={logoRef}
         >
+          {/* Logo Image */}
           <div 
             ref={logoImgRef}
             className="pill-logo-img shadow-sm"
           >
-            <img src="/logo.jpg" alt={logoAlt} className="w-full h-full object-contain" />
+            <img src="/logo.png" alt={logoAlt} className="w-full h-full object-contain" />
           </div>
-          <span className="pill-logo-text hidden md:block">
-            Ashwin S
+
+
+          <span className="pill-logo-text block">
+            PORTFOLIO
           </span>
         </a>
 
@@ -365,17 +408,19 @@ const PillNav = ({
         >
           <span className="hamburger-line" />
           <span className="hamburger-line" />
+          <span className="hamburger-line" />
         </button>
       </nav>
 
-      <div className="mobile-menu-popover mobile-only" ref={mobileMenuRef} style={cssVars}>
-        <ul className="mobile-menu-list">
+      <div className="mobile-menu-popover mobile-only" ref={mobileMenuRef} style={{ ...cssVars, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <ul className="mobile-menu-list" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', listStyle: 'none', padding: 0, margin: 0, gap: '0.45rem' }}>
           {items.map((item, i) => (
-            <li key={item.href || `mobile-item-${i}`}>
+            <li key={item.href || `mobile-item-${i}`} style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
                 <a
                   href={item.href}
                   className={`mobile-menu-link${activeHref === item.href ? ' is-active' : ''}`}
                   onClick={toggleMobileMenu}
+                  style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', width: 'auto' }}
                 >
                   {item.label}
                 </a>

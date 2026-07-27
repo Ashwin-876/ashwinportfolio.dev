@@ -23,3 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Custom project duplicates/backups
+components/
+src/components copy/
+

@@ -131,19 +131,20 @@ const Shuffle = ({
           const h = ch.getBoundingClientRect().height;
           if (!w) return;
 
+          const isVertical = shuffleDirection === 'up' || shuffleDirection === 'down';
           const wrap = document.createElement('span');
           Object.assign(wrap.style, {
             display: 'inline-block',
             overflow: 'hidden',
-            width: w + 'px',
-            height: shuffleDirection === 'up' || shuffleDirection === 'down' ? h + 'px' : 'auto',
+            width: isVertical ? 'auto' : w + 'px',
+            height: isVertical ? h + 'px' : 'auto',
             verticalAlign: 'bottom'
           });
 
           const inner = document.createElement('span');
           Object.assign(inner.style, {
             display: 'inline-block',
-            whiteSpace: shuffleDirection === 'up' || shuffleDirection === 'down' ? 'normal' : 'nowrap',
+            whiteSpace: isVertical ? 'normal' : 'nowrap',
             willChange: 'transform'
           });
 
@@ -152,15 +153,15 @@ const Shuffle = ({
 
           const firstOrig = ch.cloneNode(true);
           Object.assign(firstOrig.style, {
-            display: shuffleDirection === 'up' || shuffleDirection === 'down' ? 'block' : 'inline-block',
-            width: w + 'px',
+            display: isVertical ? 'block' : 'inline-block',
+            width: isVertical ? 'auto' : w + 'px',
             textAlign: 'center'
           });
 
           ch.setAttribute('data-orig', '1');
           Object.assign(ch.style, {
-            display: shuffleDirection === 'up' || shuffleDirection === 'down' ? 'block' : 'inline-block',
-            width: w + 'px',
+            display: isVertical ? 'block' : 'inline-block',
+            width: isVertical ? 'auto' : w + 'px',
             textAlign: 'center'
           });
 
@@ -169,8 +170,8 @@ const Shuffle = ({
             const c = ch.cloneNode(true);
             if (scrambleCharset) c.textContent = rand(scrambleCharset);
             Object.assign(c.style, {
-              display: shuffleDirection === 'up' || shuffleDirection === 'down' ? 'block' : 'inline-block',
-              width: w + 'px',
+              display: isVertical ? 'block' : 'inline-block',
+              width: isVertical ? 'auto' : w + 'px',
               textAlign: 'center'
             });
             inner.appendChild(c);

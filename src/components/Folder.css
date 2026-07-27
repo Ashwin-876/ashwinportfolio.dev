@@ -40,6 +40,7 @@
   border-radius: 0 12px 12px 12px;
   transform-origin: bottom;
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
   z-index: 20;
   box-shadow: 0 -5px 20px rgba(0,0,0,0.2), inset 0 2px 5px rgba(255,255,255,0.1);
 }
@@ -65,6 +66,7 @@
   border-radius: 12px;
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   transform-origin: bottom center;
+  will-change: transform;
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   display: flex;
   flex-direction: column;
@@ -130,24 +132,24 @@
 @media (max-width: 767px) {
   .folder {
     width: 290px;
-    height: 220px;
+    height: 270px;
   }
   .folder.open .paper-1 {
-    transform: translate(calc(var(--magnet-x, 0) + 0px), calc(var(--magnet-y, 0) - 520px)) rotate(-2deg);
+    transform: translate(calc(var(--magnet-x, 0) + 0px), calc(var(--magnet-y, 0) - 800px)) rotate(-2deg);
   }
   .folder.open .paper-2 {
-    transform: translate(calc(var(--magnet-x, 0) + 0px), calc(var(--magnet-y, 0) - 310px)) rotate(2deg);
+    transform: translate(calc(var(--magnet-x, 0) + 0px), calc(var(--magnet-y, 0) - 480px)) rotate(2deg);
   }
   .folder.open .paper-3 {
-    transform: translate(calc(var(--magnet-x, 0) + 0px), calc(var(--magnet-y, 0) - 100px)) rotate(-1deg);
+    transform: translate(calc(var(--magnet-x, 0) + 0px), calc(var(--magnet-y, 0) - 160px)) rotate(-1deg);
   }
   .folder.open .paper-4 {
-    transform: translate(calc(var(--magnet-x, 0) + 0px), calc(var(--magnet-y, 0) + 110px)) rotate(1deg);
+    transform: translate(calc(var(--magnet-x, 0) + 0px), calc(var(--magnet-y, 0) + 160px)) rotate(1deg);
   }
   .folder.open .paper-5 {
-    transform: translate(calc(var(--magnet-x, 0) + 0px), calc(var(--magnet-y, 0) + 320px)) rotate(-2deg);
+    transform: translate(calc(var(--magnet-x, 0) + 0px), calc(var(--magnet-y, 0) + 480px)) rotate(-2deg);
   }
   .folder.open .paper-6 {
-    transform: translate(calc(var(--magnet-x, 0) + 0px), calc(var(--magnet-y, 0) + 530px)) rotate(3deg);
+    transform: translate(calc(var(--magnet-x, 0) + 0px), calc(var(--magnet-y, 0) + 800px)) rotate(3deg);
   }
 }

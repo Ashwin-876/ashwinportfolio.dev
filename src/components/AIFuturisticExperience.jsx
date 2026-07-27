@@ -120,7 +120,9 @@ const TimelineParticleCanvas = () => {
       });
     }
 
+    let isVisible = false;
     const draw = () => {
+      if (!isVisible) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       particles.forEach((p) => {
         p.x += p.speedX;
@@ -137,10 +139,27 @@ const TimelineParticleCanvas = () => {
       animationId = requestAnimationFrame(draw);
     };
 
-    draw();
+    const observer = new IntersectionObserver(([entry]) => {
+      isVisible = entry.isIntersecting;
+      if (isVisible) {
+        if (!animationId) {
+          draw();
+        }
+      } else {
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+          animationId = null;
+        }
+      }
+    }, { threshold: 0.01 });
+
+    observer.observe(canvas);
 
     return () => {
-      cancelAnimationFrame(animationId);
+      observer.disconnect();
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
       window.removeEventListener('resize', handleResize);
     };
   }, []);
@@ -226,11 +245,17 @@ const ExperienceCard = ({ exp, index }) => {
       </div>
 
       {/* Center Glassmorphic Node Wrapper */}
-      <div className="absolute left-6 lg:left-1/2 top-[38px] lg:top-[110px] -translate-y-1/2 -translate-x-1/2 w-8 h-8 z-20 flex items-center justify-center pointer-events-none">
-        {/* Inner pulsing node animated by GSAP */}
-        <div className="exp-node w-full h-full rounded-full bg-white/95 backdrop-blur-md border border-neutral-200/80 shadow-[0_4px_12px_rgba(0,0,0,0.03)] flex items-center justify-center group-hover:border-blue-400 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] transition-all duration-500 pointer-events-auto">
-          <div className="absolute inset-0 bg-blue-500/10 rounded-full blur-[4px] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.7)]" />
+      <div className="absolute left-6 lg:left-1/2 top-[38px] lg:top-[110px] -translate-y-1/2 -translate-x-1/2 w-7 h-7 z-20 flex items-center justify-center pointer-events-none">
+        {/* Outer glass circle (28px) */}
+        <div className="exp-node w-full h-full rounded-full bg-white/45 backdrop-blur-[8px] border border-white/60 shadow-[0_4px_12px_rgba(0,0,0,0.05),0_0_10px_rgba(59,130,246,0.05),inset_0_1px_1px_rgba(255,255,255,0.35)] flex items-center justify-center group-hover:border-blue-500/80 group-hover:shadow-[0_0_15px_rgba(59,130,246,0.25)] transition-all duration-500 pointer-events-auto relative">
+          {/* Pulsing ring background */}
+          <div className="absolute inset-0 rounded-full border border-blue-500/20 animate-ping opacity-60 pointer-events-none" style={{ animationDuration: '3s' }} />
+          
+          {/* Inner soft glow */}
+          <div className="absolute inset-0.5 rounded-full bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
+          {/* Small blue center dot */}
+          <div className="w-2 h-2 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.6)] z-10" />
         </div>
       </div>
 
@@ -322,24 +347,25 @@ const AIFuturisticExperience = () => {
     });
     triggers.push(lineTrigger);
 
-    // Reveal animations for each row (alternating side entry)
+    // Reveal animations for each row (alternating side entry on desktop, purely vertical on mobile)
     rows.forEach((row, i) => {
       const card = row.querySelector('.exp-card');
       const side = row.querySelector('.exp-side');
       const node = row.querySelector('.exp-node');
 
       const isEven = i % 2 === 0;
+      const isMobileLayout = window.innerWidth < 1024;
 
       // Cards slide in from alternating sides
       gsap.set(card, { 
-        x: isEven ? 40 : -40, 
+        x: isMobileLayout ? 0 : (isEven ? 40 : -40), 
         opacity: 0,
         y: 20
       });
       
       // Side elements slide from opposite side
       gsap.set(side, { 
-        x: isEven ? -30 : 30, 
+        x: isMobileLayout ? 0 : (isEven ? -30 : 30), 
         opacity: 0,
         y: 10
       });
@@ -376,7 +402,7 @@ const AIFuturisticExperience = () => {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.012)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.012)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none -z-10 opacity-70" />
       
       {/* Micro-noise texture */}
-      <div className="absolute inset-0 opacity-[0.012] pointer-events-none -z-10" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.75\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }} />
+      <div className="absolute inset-0 opacity-[0.012] pointer-events-none -z-10 will-change-transform" style={{ transform: 'translate3d(0,0,0)', backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.75\' numOctaves=\'1\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }} />
 
       {/* Canvas Particle Loop */}
       <TimelineParticleCanvas />
@@ -384,8 +410,8 @@ const AIFuturisticExperience = () => {
       {/* Inner relative container for line and cards stream to guarantee sub-pixel alignment */}
       <div className="relative w-full px-6 sm:px-8">
         {/* Central Neural Progress Line */}
-        <div className="absolute left-6 lg:left-1/2 top-4 bottom-4 w-[2px] bg-neutral-200/50 -translate-x-1/2 rounded-full overflow-hidden">
-          <div className="neural-line-fill w-full bg-gradient-to-b from-blue-500 via-indigo-400 to-blue-600 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
+        <div className="absolute left-6 lg:left-1/2 top-4 bottom-4 w-[1px] bg-neutral-200 -translate-x-1/2 rounded-full overflow-hidden">
+          <div className="neural-line-fill w-full bg-blue-500/60" />
         </div>
 
         {/* Cards Stream */}

@@ -41,54 +41,61 @@ export default function PremiumFooter() {
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Scroll reveal
+    // Scroll reveal (Subtle slide-up and fade-in)
     const elements = containerRef.current.querySelectorAll('.footer-reveal');
-    const revealTween = gsap.fromTo(elements,
-      { y: 60, opacity: 0, filter: 'blur(10px)' },
-      {
-        y: 0,
-        opacity: 1,
-        filter: 'blur(0px)',
-        duration: 1.2,
-        stagger: 0.1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 80%",
+    let revealTween = null;
+    if (elements.length > 0) {
+      revealTween = gsap.fromTo(elements,
+        { y: 30, opacity: 0, filter: 'blur(6px)' },
+        {
+          y: 0,
+          opacity: 1,
+          filter: 'blur(0px)',
+          duration: 0.8,
+          stagger: 0.08,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 85%",
+          }
         }
-      }
-    );
+      );
+    }
 
-    // Social icons staggered drop-in
-    const socialTween = gsap.fromTo(socialRefs.current,
-      { y: 80, opacity: 0, scale: 0.8 },
-      {
-        y: 0,
-        opacity: 1,
-        scale: 1,
-        duration: 1.2,
-        stagger: 0.1,
-        ease: "elastic.out(1, 0.5)",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 75%",
+    // Social icons staggered drop-in (Organic bounce effect)
+    const validSocialRefs = socialRefs.current.filter(Boolean);
+    let socialTween = null;
+    if (validSocialRefs.length > 0) {
+      socialTween = gsap.fromTo(validSocialRefs,
+        { y: 40, opacity: 0, scale: 0.8 },
+        {
+          y: 0,
+          opacity: 1,
+          scale: 1,
+          duration: 0.8,
+          stagger: 0.06,
+          ease: "back.out(1.7)",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 80%",
+          }
         }
-      }
-    );
+      );
+    }
 
-    // Magnetic effect for social icons
+    // Magnetic effect for social icons (Smooth mouse-hover & touch-drag coordination)
     const cleanups = [];
     socialRefs.current.forEach((icon) => {
       if (!icon) return;
-      const xTo = gsap.quickTo(icon, "x", { duration: 0.4, ease: "power3.out" });
-      const yTo = gsap.quickTo(icon, "y", { duration: 0.4, ease: "power3.out" });
+      const xTo = gsap.quickTo(icon, "x", { duration: 0.3, ease: "power2.out" });
+      const yTo = gsap.quickTo(icon, "y", { duration: 0.3, ease: "power2.out" });
 
       const handleMouseMove = (e) => {
         const rect = icon.getBoundingClientRect();
         const x = e.clientX - rect.left - rect.width / 2;
         const y = e.clientY - rect.top - rect.height / 2;
-        xTo(x * 0.4);
-        yTo(y * 0.4);
+        xTo(x * 0.45);
+        yTo(y * 0.45);
       };
 
       const handleMouseLeave = () => {
@@ -96,20 +103,44 @@ export default function PremiumFooter() {
         yTo(0);
       };
 
+      const handleTouchMove = (e) => {
+        if (e.touches.length === 0) return;
+        const touch = e.touches[0];
+        const rect = icon.getBoundingClientRect();
+        const x = touch.clientX - rect.left - rect.width / 2;
+        const y = touch.clientY - rect.top - rect.height / 2;
+        const maxDist = 20;
+        xTo(Math.max(-maxDist, Math.min(maxDist, x * 0.45)));
+        yTo(Math.max(-maxDist, Math.min(maxDist, y * 0.45)));
+      };
+
+      const handleTouchEnd = () => {
+        xTo(0);
+        yTo(0);
+      };
+
       icon.addEventListener("mousemove", handleMouseMove);
       icon.addEventListener("mouseleave", handleMouseLeave);
+      icon.addEventListener("touchmove", handleTouchMove, { passive: true });
+      icon.addEventListener("touchend", handleTouchEnd, { passive: true });
 
       cleanups.push(() => {
         icon.removeEventListener("mousemove", handleMouseMove);
         icon.removeEventListener("mouseleave", handleMouseLeave);
+        icon.removeEventListener("touchmove", handleTouchMove);
+        icon.removeEventListener("touchend", handleTouchEnd);
       });
     });
 
     return () => {
-      revealTween.kill();
-      if (revealTween.scrollTrigger) revealTween.scrollTrigger.kill();
-      socialTween.kill();
-      if (socialTween.scrollTrigger) socialTween.scrollTrigger.kill();
+      if (revealTween) {
+        revealTween.kill();
+        if (revealTween.scrollTrigger) revealTween.scrollTrigger.kill();
+      }
+      if (socialTween) {
+        socialTween.kill();
+        if (socialTween.scrollTrigger) socialTween.scrollTrigger.kill();
+      }
       cleanups.forEach(c => c());
     };
   }, []);
@@ -165,7 +196,7 @@ export default function PremiumFooter() {
               ref={el => socialRefs.current[i] = el}
               className="relative group p-2" // Padding increases magnetic hit area
             >
-              <div className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full bg-white/50 backdrop-blur-2xl border border-black/5 shadow-[0_20px_40px_rgba(0,0,0,0.04)] flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:-translate-y-2 group-hover:bg-white/80 group-hover:border-cyan-400/30 group-hover:shadow-[0_30px_60px_rgba(34,211,238,0.2)] overflow-hidden">
+              <div className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full bg-white/50 backdrop-blur-2xl border border-black/5 shadow-[0_20px_40px_rgba(0,0,0,0.04)] flex items-center justify-center transition-all duration-250 group-hover:scale-110 group-hover:-translate-y-2 group-hover:bg-white/80 group-hover:border-cyan-400/30 group-hover:shadow-[0_30px_60px_rgba(34,211,238,0.2)] overflow-hidden">
                 
                 {/* Active Hover Glow Ripple */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-cyan-400/0 via-blue-400/0 to-purple-400/0 group-hover:from-cyan-400/10 group-hover:via-blue-400/10 group-hover:to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -191,7 +222,7 @@ export default function PremiumFooter() {
           {/* Logo & Brand */}
           <div className="flex items-center gap-4 group cursor-pointer">
             <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-[0_10px_20px_rgba(0,0,0,0.1)] group-hover:shadow-[0_15px_30px_rgba(0,0,0,0.2)] overflow-hidden flex-shrink-0">
-              <img src="/logo.jpg" alt="Logo" className="w-full h-full object-contain" />
+              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <span className="font-bold text-black tracking-[0.3em] text-sm md:text-base uppercase group-hover:text-blue-600 transition-colors duration-300">
               Ashwin S

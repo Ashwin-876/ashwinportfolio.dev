@@ -133,7 +133,7 @@ export default function ContactCTA() {
       <div className="relative z-10 flex flex-col items-center text-center px-6 sm:px-12 w-full max-w-5xl mx-auto">
         
         {/* Availability Badge */}
-        <div className="reveal-up mb-8 flex items-center gap-3 bg-white backdrop-blur-md border border-neutral-200 shadow-sm px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.02)]">
+        <div className="reveal-up mb-8 flex items-center gap-3 bg-white border border-neutral-200 shadow-sm px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(255,255,255,0.02)]">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
@@ -149,7 +149,7 @@ export default function ContactCTA() {
         </span>
 
         {/* Main Heading */}
-        <h2 className="reveal-up text-white text-5xl sm:text-6xl md:text-7xl lg:text-[6.5rem] font-medium tracking-tight leading-[1.1] mb-8 flex flex-col items-center">
+        <h2 className="reveal-up text-white text-3xl sm:text-5xl md:text-7xl lg:text-[6.5rem] font-medium tracking-tight leading-[1.1] mb-8 flex flex-col items-center w-full">
           <span className="text-white/95">Let's build the</span>
           <div className="h-[1.2em] relative flex justify-center w-full mt-2">
             <AnimatePresence mode="wait">
@@ -178,7 +178,7 @@ export default function ContactCTA() {
           <a href="mailto:ashwinshaijus@gmail.com" className="block relative group">
             <button 
               ref={buttonRef}
-              className="relative px-10 py-5 bg-white/5 backdrop-blur-xl border border-cyan-500/20 rounded-full flex items-center justify-center gap-3 overflow-hidden transition-colors duration-300 group-hover:border-cyan-400/50 group-hover:bg-cyan-950/20 shadow-[0_0_40px_rgba(6,182,212,0.1)] group-hover:shadow-[0_0_60px_rgba(6,182,212,0.25)]"
+              className="relative px-10 py-5 bg-white/5 border border-cyan-500/20 rounded-full flex items-center justify-center gap-3 overflow-hidden transition-colors duration-300 group-hover:border-cyan-400/50 group-hover:bg-cyan-950/20 shadow-[0_0_40px_rgba(6,182,212,0.1)] group-hover:shadow-[0_0_60px_rgba(6,182,212,0.25)]"
             >
               {/* Shimmer Sweep Animation */}
               <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-20deg]" />
