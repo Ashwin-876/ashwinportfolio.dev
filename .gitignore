@@ -25,6 +25,6 @@ dist-ssr
 .vercel
 
 # Custom project duplicates/backups
-components/
-src/components copy/
+/components/
+/src/components copy/
 
