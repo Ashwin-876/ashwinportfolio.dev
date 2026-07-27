@@ -320,31 +320,31 @@ export default function AshwinMobilePortfolio() {
           </button>
 
           {/* Social Icons positioned directly below CTA button with 32px spacing (mt-8) */}
-          <div className="flex items-center gap-[22px] mt-8 pointer-events-auto">
+          <div className="flex items-center gap-[18px] mt-8 pointer-events-auto">
             <a 
               href="https://linkedin.com/in/ashwinshaiju" 
               target="_blank" 
               rel="noopener noreferrer" 
               aria-label="LinkedIn"
-              className="w-[52px] h-[52px] flex items-center justify-center rounded-full border border-white/40 bg-white/18 backdrop-blur-[20px] hover:bg-white/30 hover:scale-[1.08] hover:-translate-y-1 transition-all duration-300 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(255,255,255,0.25)] cursor-pointer"
+              className="w-[42px] h-[42px] flex items-center justify-center rounded-full border border-white/40 bg-white/18 backdrop-blur-[20px] hover:bg-white/30 hover:scale-[1.08] hover:-translate-y-1 transition-all duration-300 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(255,255,255,0.25)] cursor-pointer"
             >
-              <FaLinkedin className="w-4.5 h-4.5 text-black" />
+              <FaLinkedin className="w-4 h-4 text-black" />
             </a>
             <a 
               href="https://github.com/Ashwin-876" 
               target="_blank" 
               rel="noopener noreferrer" 
               aria-label="GitHub"
-              className="w-[52px] h-[52px] flex items-center justify-center rounded-full border border-white/40 bg-white/18 backdrop-blur-[20px] hover:bg-white/30 hover:scale-[1.08] hover:-translate-y-1 transition-all duration-300 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(255,255,255,0.25)] cursor-pointer"
+              className="w-[42px] h-[42px] flex items-center justify-center rounded-full border border-white/40 bg-white/18 backdrop-blur-[20px] hover:bg-white/30 hover:scale-[1.08] hover:-translate-y-1 transition-all duration-300 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(255,255,255,0.25)] cursor-pointer"
             >
-              <FaGithub className="w-4.5 h-4.5 text-black" />
+              <FaGithub className="w-4 h-4 text-black" />
             </a>
             <a 
               href="mailto:ashwinshaijus@gmail.com" 
               aria-label="Email"
-              className="w-[52px] h-[52px] flex items-center justify-center rounded-full border border-white/40 bg-white/18 backdrop-blur-[20px] hover:bg-white/30 hover:scale-[1.08] hover:-translate-y-1 transition-all duration-300 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(255,255,255,0.25)] cursor-pointer"
+              className="w-[42px] h-[42px] flex items-center justify-center rounded-full border border-white/40 bg-white/18 backdrop-blur-[20px] hover:bg-white/30 hover:scale-[1.08] hover:-translate-y-1 transition-all duration-300 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(255,255,255,0.25)] cursor-pointer"
             >
-              <Mail className="w-4.5 h-4.5 text-black" />
+              <Mail className="w-4 h-4 text-black" />
             </a>
           </div>
         </div>
